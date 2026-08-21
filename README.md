@@ -24,6 +24,25 @@ database/   PostgreSQL schema and database assets
 samples/    Example CSV files
 ```
 
+## Local PostgreSQL
+
+Install and run PostgreSQL locally, then create the application's environment
+file:
+
+```bash
+cp .env.example .env
+```
+
+Add your local PostgreSQL connection string to `DATABASE_URL` in `.env`. The
+expected format is:
+
+```dotenv
+DATABASE_URL=postgresql://username:password@127.0.0.1:5432/moodle_user_import
+```
+
+The `.env` file is ignored by Git. Never commit a real connection string or
+database credentials.
+
 ## Development status
 
 The project is being implemented incrementally. Phase 1 establishes the repository, backend and frontend tooling, and the local PostgreSQL environment.
@@ -39,4 +58,3 @@ The completed README will include:
 - CLI examples
 - Testing instructions
 - Assumptions and design decisions
-
