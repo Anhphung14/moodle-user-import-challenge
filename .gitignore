@@ -1,0 +1,25 @@
+# Local configuration and secrets
+.env
+.env.local
+.env.*.local
+!.env.example
+
+# PHP
+backend/vendor/
+backend/.phpunit.cache/
+backend/coverage/
+
+# Node / React
+frontend/node_modules/
+frontend/dist/
+frontend/coverage/
+
+# IDE and operating system
+.DS_Store
+.idea/
+.vscode/
+
+# Codex working artifacts (not application source)
+work/
+outputs/
+
