@@ -1,0 +1,32 @@
+{
+  "name": "moodle/user-import",
+  "description": "Shared backend for the Moodle user import web and CLI applications.",
+  "type": "project",
+  "license": "proprietary",
+  "require": {
+    "php": "^8.3"
+  },
+  "require-dev": {
+    "phpunit/phpunit": "^12.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "Application\\": "src/"
+    }
+  },
+  "autoload-dev": {
+    "psr-4": {
+      "Application\\Tests\\": "tests/"
+    }
+  },
+  "scripts": {
+    "test": "phpunit",
+    "lint": [
+      "@php -l src/Application.php",
+      "@php -l tests/Smoke/ApplicationTest.php"
+    ]
+  },
+  "config": {
+    "sort-packages": true
+  }
+}
