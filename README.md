@@ -2,6 +2,8 @@
 
 A CSV user-import application with a React interface, a PHP REST API, and a command-line interface. The web and CLI entry points share the same parsing, normalization, validation, duplicate-detection, and PostgreSQL persistence flow.
 
+> **Technical walkthrough:** Read [`docs/IMPLEMENTATION_NOTES.md`](docs/IMPLEMENTATION_NOTES.md) for the implementation rationale, trade-offs, correctness guarantees, and future improvements.
+
 ## Requirements
 
 - PHP 8.3+ with the `pdo_pgsql` and `mbstring` extensions
