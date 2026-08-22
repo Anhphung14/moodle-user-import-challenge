@@ -7,6 +7,7 @@ namespace Application\Tests\Unit\Cli;
 use Application\Cli\CliApplication;
 use Application\Csv\Exception\CsvParsingException;
 use Application\Domain\ImportPreview;
+use Application\Domain\ImportResult;
 use Application\Domain\ValidatedUserRecord;
 use Application\Domain\ValidationError;
 use PDOException;
@@ -15,6 +16,85 @@ use RuntimeException;
 
 final class CliApplicationTest extends TestCase
 {
+    public function testImportDisplaysImportedRejectedAndValidationErrors(): void
+    {
+        $receivedFile = null;
+        $result = new ImportResult(
+            1,
+            1,
+            [new ValidationError(3, 'email', 'invalid_email', 'Email is invalid.')],
+        );
+        $application = new CliApplication(
+            importUsers: static function (string $filePath) use ($result, &$receivedFile): ImportResult {
+                $receivedFile = $filePath;
+
+                return $result;
+            },
+        );
+
+        [$exitCode, $stdout, $stderr] = $this->executeCli(
+            ['user_upload.php', '--file', 'users.csv'],
+            $application,
+        );
+
+        self::assertSame(CliApplication::SUCCESS, $exitCode);
+        self::assertSame('users.csv', $receivedFile);
+        self::assertStringContainsString("Users found: 2\n", $stdout);
+        self::assertStringContainsString("Imported: 1\n", $stdout);
+        self::assertStringContainsString("Rejected: 1\n", $stdout);
+        self::assertStringContainsString('Row 3 [email] invalid_email: Email is invalid.', $stdout);
+        self::assertSame('', $stderr);
+    }
+
+    public function testImportFileErrorIsWrittenToStderr(): void
+    {
+        $application = new CliApplication(
+            importUsers: static function (): never {
+                throw new CsvParsingException('CSV file does not exist or is not readable.');
+            },
+        );
+
+        [$exitCode, $stdout, $stderr] = $this->executeCli(
+            ['user_upload.php', '--file', 'missing.csv'],
+            $application,
+        );
+
+        self::assertSame(CliApplication::RUNTIME_ERROR, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertSame("Error: CSV file does not exist or is not readable.\n", $stderr);
+    }
+
+    public function testImportUnexpectedErrorDoesNotExposeTechnicalDetails(): void
+    {
+        $application = new CliApplication(
+            importUsers: static function (): never {
+                throw new RuntimeException('password=secret; SQL details');
+            },
+        );
+
+        [$exitCode, $stdout, $stderr] = $this->executeCli(
+            ['user_upload.php', '--file', 'users.csv'],
+            $application,
+        );
+
+        self::assertSame(CliApplication::RUNTIME_ERROR, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertSame("Error: Unable to import the CSV file. No users were imported.\n", $stderr);
+    }
+
+    public function testImportWithoutConfiguredHandlerReturnsRuntimeError(): void
+    {
+        [$exitCode, $stdout, $stderr] = $this->executeCli([
+            'user_upload.php',
+            '--file',
+            'users.csv',
+        ]);
+
+        self::assertSame(CliApplication::RUNTIME_ERROR, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertSame("Error: CSV import is not configured.\n", $stderr);
+    }
+
     public function testHelpWritesUsageToStdoutAndReturnsSuccess(): void
     {
         [$exitCode, $stdout, $stderr] = $this->executeCli(['user_upload.php', '--help']);
@@ -33,19 +113,6 @@ final class CliApplicationTest extends TestCase
         self::assertSame('', $stdout);
         self::assertStringContainsString('Error: Unknown argument: --unknown', $stderr);
         self::assertStringContainsString('Usage:', $stderr);
-    }
-
-    public function testValidPendingCommandReturnsRuntimeError(): void
-    {
-        [$exitCode, $stdout, $stderr] = $this->executeCli([
-            'user_upload.php',
-            '--file',
-            'users.csv',
-        ]);
-
-        self::assertSame(CliApplication::RUNTIME_ERROR, $exitCode);
-        self::assertSame('', $stdout);
-        self::assertSame("Error: Command execution is not available yet.\n", $stderr);
     }
 
     public function testCreateTableRunsRebuildAndReturnsSuccess(): void

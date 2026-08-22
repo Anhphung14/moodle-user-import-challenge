@@ -8,6 +8,7 @@ use Application\Csv\CsvUserParser;
 use Application\Database\ConnectionFactory;
 use Application\Database\SchemaManager;
 use Application\Domain\ImportPreview;
+use Application\Domain\ImportResult;
 use Application\Repository\PostgresUserRepository;
 use Application\Service\DatabaseDuplicateEmailDetector;
 use Application\Service\DuplicateEmailDetector;
@@ -42,8 +43,10 @@ $createImportService = static function (): UserImportService {
 };
 
 $previewUsers = static fn (string $filePath): ImportPreview => $createImportService()->preview($filePath);
+$importUsers = static fn (string $filePath): ImportResult => $createImportService()->import($filePath);
 
 exit((new CliApplication(
     rebuildUsersTable: $rebuildUsersTable,
     previewUsers: $previewUsers,
+    importUsers: $importUsers,
 ))->run($argv));

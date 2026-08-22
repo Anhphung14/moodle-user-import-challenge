@@ -9,6 +9,7 @@ use Application\Csv\CsvUserParser;
 use Application\Database\ConnectionFactory;
 use Application\Database\SchemaManager;
 use Application\Domain\ImportPreview;
+use Application\Domain\ImportResult;
 use Application\Repository\PostgresUserRepository;
 use Application\Service\DatabaseDuplicateEmailDetector;
 use Application\Service\DuplicateEmailDetector;
@@ -115,6 +116,49 @@ final class CliApplicationTest extends TestCase
         self::assertStringContainsString("Invalid: 2\n", $output);
         self::assertStringContainsString("Would import 1 users.\n", $output);
         self::assertSame($countBefore, $this->userCount());
+        fclose($stdout);
+        fclose($stderr);
+    }
+
+    public function testImportPersistsOnlyValidRecordsAndReportsRejectedRecords(): void
+    {
+        $filePath = $this->csv(<<<'CSV'
+            name,surname,email
+            new,user,NEW@EXAMPLE.COM
+            existing,user,existing@example.com
+            invalid,user,not-an-email
+            CSV);
+        $application = new CliApplication(
+            importUsers: fn (string $path): ImportResult => $this->service()->import($path),
+        );
+        $stdout = fopen('php://memory', 'w+');
+        $stderr = fopen('php://memory', 'w+');
+        self::assertIsResource($stdout);
+        self::assertIsResource($stderr);
+
+        $exitCode = $application->run(
+            ['user_upload.php', '--file', $filePath],
+            $stdout,
+            $stderr,
+        );
+        rewind($stdout);
+        rewind($stderr);
+        $output = stream_get_contents($stdout);
+        $errorOutput = stream_get_contents($stderr);
+
+        self::assertSame(CliApplication::SUCCESS, $exitCode);
+        self::assertIsString($output);
+        self::assertSame('', $errorOutput);
+        self::assertStringContainsString("Users found: 3\n", $output);
+        self::assertStringContainsString("Imported: 1\n", $output);
+        self::assertStringContainsString("Rejected: 2\n", $output);
+        self::assertSame(2, $this->userCount());
+        self::assertSame(
+            1,
+            (int) $this->connection
+                ->query("SELECT COUNT(*) FROM users WHERE email = 'new@example.com'")
+                ->fetchColumn(),
+        );
         fclose($stdout);
         fclose($stderr);
     }

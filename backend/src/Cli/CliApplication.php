@@ -7,6 +7,7 @@ namespace Application\Cli;
 use Application\Cli\Exception\InvalidCliArgumentsException;
 use Application\Csv\Exception\CsvParsingException;
 use Application\Domain\ImportPreview;
+use Application\Domain\ImportResult;
 use Closure;
 use PDOException;
 use Throwable;
@@ -24,6 +25,7 @@ final class CliApplication
         private readonly Usage $usage = new Usage(),
         private readonly ?Closure $rebuildUsersTable = null,
         private readonly ?Closure $previewUsers = null,
+        private readonly ?Closure $importUsers = null,
     ) {
     }
 
@@ -59,7 +61,11 @@ final class CliApplication
             return $this->previewUsers($options->file, $stdout, $stderr);
         }
 
-        fwrite($stderr, "Error: Command execution is not available yet.\n");
+        if ($options->file !== null) {
+            return $this->importUsers($options->file, $stdout, $stderr);
+        }
+
+        fwrite($stderr, "Error: No command was provided.\n");
 
         return self::RUNTIME_ERROR;
     }
@@ -154,6 +160,68 @@ final class CliApplication
         }
 
         fwrite($stdout, sprintf("Would import %d users.\n", $preview->validCount()));
+
+        return self::SUCCESS;
+    }
+
+    /**
+     * @param resource $stdout
+     * @param resource $stderr
+     */
+    private function importUsers(string $filePath, mixed $stdout, mixed $stderr): int
+    {
+        if ($this->importUsers === null) {
+            fwrite($stderr, "Error: CSV import is not configured.\n");
+
+            return self::RUNTIME_ERROR;
+        }
+
+        try {
+            $result = ($this->importUsers)($filePath);
+
+            if (!$result instanceof ImportResult) {
+                throw new \UnexpectedValueException('Import handler returned an invalid result.');
+            }
+        } catch (CsvParsingException $exception) {
+            fwrite($stderr, sprintf("Error: %s\n", $exception->getMessage()));
+
+            return self::RUNTIME_ERROR;
+        } catch (PDOException $exception) {
+            $sqlState = $exception->errorInfo[0] ?? (string) $exception->getCode();
+
+            if ($sqlState === '42P01') {
+                fwrite($stderr, "Error: The users table does not exist. Run --create-table first.\n");
+
+                return self::RUNTIME_ERROR;
+            }
+
+            fwrite($stderr, "Error: Unable to import the CSV file. No users were imported.\n");
+
+            return self::RUNTIME_ERROR;
+        } catch (Throwable) {
+            fwrite($stderr, "Error: Unable to import the CSV file. No users were imported.\n");
+
+            return self::RUNTIME_ERROR;
+        }
+
+        fwrite($stdout, "Import complete.\n");
+        fwrite($stdout, sprintf("Users found: %d\n", $result->totalCount()));
+        fwrite($stdout, sprintf("Imported: %d\n", $result->importedCount));
+        fwrite($stdout, sprintf("Rejected: %d\n", $result->rejectedCount));
+
+        if ($result->errors !== []) {
+            fwrite($stdout, "Errors:\n");
+
+            foreach ($result->errors as $error) {
+                fwrite($stdout, sprintf(
+                    "  Row %d [%s] %s: %s\n",
+                    $error->rowNumber,
+                    $error->field,
+                    $error->code,
+                    $error->message,
+                ));
+            }
+        }
 
         return self::SUCCESS;
     }
