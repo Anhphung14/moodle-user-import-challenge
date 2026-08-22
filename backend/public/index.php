@@ -4,11 +4,13 @@ declare(strict_types=1);
 
 use Application\Http\HttpApplication;
 use Application\Http\HttpRequest;
+use Application\Http\ImportController;
 use Application\Http\PreviewController;
 use Application\Http\Router;
 use Application\Csv\CsvUserParser;
 use Application\Database\ConnectionFactory;
 use Application\Domain\ImportPreview;
+use Application\Domain\ImportResult;
 use Application\Repository\PostgresUserRepository;
 use Application\Service\DatabaseDuplicateEmailDetector;
 use Application\Service\DuplicateEmailDetector;
@@ -25,10 +27,11 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $request = HttpRequest::fromGlobals($method, $requestUri, $_FILES);
 $router = new Router();
-$previewUsers = static function (string $filePath): ImportPreview {
+$createImportService = static function (): UserImportService {
     $connection = (new ConnectionFactory())->create();
     $repository = new PostgresUserRepository($connection);
-    $service = new UserImportService(
+
+    return new UserImportService(
         new CsvUserParser(),
         new UserNormalizer(),
         new UserValidator(),
@@ -37,10 +40,12 @@ $previewUsers = static function (string $filePath): ImportPreview {
         $repository,
         $connection,
     );
-
-    return $service->preview($filePath);
 };
-$controller = new PreviewController($previewUsers);
-$router->add('POST', '/api/imports/preview', $controller(...));
+$previewUsers = static fn (string $filePath): ImportPreview => $createImportService()->preview($filePath);
+$importUsers = static fn (string $filePath): ImportResult => $createImportService()->import($filePath);
+$previewController = new PreviewController($previewUsers);
+$importController = new ImportController($importUsers);
+$router->add('POST', '/api/imports/preview', $previewController(...));
+$router->add('POST', '/api/imports', $importController(...));
 
 (new HttpApplication($router))->handle($request->method, $request->path, $request->files)->send();
