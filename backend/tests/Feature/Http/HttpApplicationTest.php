@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Application\Tests\Feature\Http;
 
 use Application\Http\HttpApplication;
+use Application\Http\HttpRequest;
 use Application\Http\JsonResponse;
 use Application\Http\Router;
 use PHPUnit\Framework\TestCase;
@@ -34,7 +35,7 @@ final class HttpApplicationTest extends TestCase
     public function testUnexpectedExceptionReturnsSafeJsonWithoutStackTrace(): void
     {
         $router = new Router();
-        $router->add('GET', '/api/failure', static function (): never {
+        $router->add('GET', '/api/failure', static function (HttpRequest $_request): never {
             throw new RuntimeException('password=secret; internal path=/private/app.php');
         });
 

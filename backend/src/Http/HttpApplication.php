@@ -19,22 +19,22 @@ final class HttpApplication
 
     public function __construct(private readonly Router $router = new Router())
     {
-        $this->router->add('GET', '/api/health', static fn (): JsonResponse => new JsonResponse([
+        $this->router->add('GET', '/api/health', static fn (HttpRequest $_request): JsonResponse => new JsonResponse([
             'data' => ['status' => 'ok'],
         ]));
     }
 
-    public function handle(string $method, string $requestUri): JsonResponse
+    /** @param array<string, UploadedFile> $files */
+    public function handle(string $method, string $requestUri, array $files = []): JsonResponse
     {
         if (strtoupper($method) === 'OPTIONS') {
             return new JsonResponse([], 204, self::JSON_HEADERS);
         }
 
-        $path = parse_url($requestUri, PHP_URL_PATH);
-        $path = is_string($path) && $path !== '' ? $path : '/';
+        $request = new HttpRequest(strtoupper($method), $this->path($requestUri), $files);
 
         try {
-            $response = $this->router->dispatch($method, $path);
+            $response = $this->router->dispatch($request);
 
             if ($response === null) {
                 return $this->error(404, 'not_found', 'The requested endpoint was not found.');
@@ -48,6 +48,13 @@ final class HttpApplication
         } catch (Throwable) {
             return $this->error(500, 'internal_error', 'An unexpected error occurred.');
         }
+    }
+
+    private function path(string $requestUri): string
+    {
+        $path = parse_url($requestUri, PHP_URL_PATH);
+
+        return is_string($path) && $path !== '' ? $path : '/';
     }
 
     private function error(int $status, string $code, string $message): JsonResponse
