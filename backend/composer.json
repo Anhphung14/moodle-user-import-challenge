@@ -25,12 +25,16 @@
     "lint": [
       "@php -l src/Application.php",
       "@php -l src/Database/ConnectionFactory.php",
+      "@php -l src/Database/SchemaManager.php",
       "@php -l src/Database/Exception/DatabaseConfigurationException.php",
       "@php -l src/Database/Exception/DatabaseConnectionException.php",
+      "@php -l src/Database/Exception/SchemaManagementException.php",
       "@php -l tests/bootstrap.php",
       "@php -l tests/Smoke/ApplicationTest.php",
       "@php -l tests/Unit/Database/ConnectionFactoryTest.php",
-      "@php -l tests/Integration/Database/ConnectionFactoryTest.php"
+      "@php -l tests/Unit/Database/SchemaManagerTest.php",
+      "@php -l tests/Integration/Database/ConnectionFactoryTest.php",
+      "@php -l tests/Integration/Database/SchemaManagerTest.php"
     ]
   },
   "config": {
