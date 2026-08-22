@@ -39,6 +39,7 @@
       "@php -l src/Service/UserNormalizer.php",
       "@php -l src/Service/UserValidator.php",
       "@php -l src/Service/DuplicateEmailDetector.php",
+      "@php -l src/Service/DatabaseDuplicateEmailDetector.php",
       "@php -l src/Repository/UserRepository.php",
       "@php -l src/Repository/PostgresUserRepository.php",
       "@php -l tests/bootstrap.php",
@@ -53,10 +54,12 @@
       "@php -l tests/Unit/Service/UserNormalizerTest.php",
       "@php -l tests/Unit/Service/UserValidatorTest.php",
       "@php -l tests/Unit/Service/DuplicateEmailDetectorTest.php",
+      "@php -l tests/Unit/Service/DatabaseDuplicateEmailDetectorTest.php",
       "@php -l tests/Unit/Repository/PostgresUserRepositoryTest.php",
       "@php -l tests/Integration/Database/ConnectionFactoryTest.php",
       "@php -l tests/Integration/Database/SchemaManagerTest.php",
-      "@php -l tests/Integration/Repository/PostgresUserRepositoryTest.php"
+      "@php -l tests/Integration/Repository/PostgresUserRepositoryTest.php",
+      "@php -l tests/Integration/Service/DatabaseDuplicateEmailDetectorTest.php"
     ]
   },
   "config": {
