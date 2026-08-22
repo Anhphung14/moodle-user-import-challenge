@@ -36,6 +36,9 @@
       "@php -l src/Cli/CliOptions.php",
       "@php -l src/Cli/Usage.php",
       "@php -l src/Cli/Exception/InvalidCliArgumentsException.php",
+      "@php -l src/Http/HttpApplication.php",
+      "@php -l src/Http/JsonResponse.php",
+      "@php -l src/Http/Router.php",
       "@php -l src/Domain/UserRecord.php",
       "@php -l src/Domain/ValidationError.php",
       "@php -l src/Domain/ValidatedUserRecord.php",
@@ -71,6 +74,8 @@
       "@php -l tests/Integration/Repository/PostgresUserRepositoryTest.php",
       "@php -l tests/Integration/Service/DatabaseDuplicateEmailDetectorTest.php",
       "@php -l tests/Integration/Service/UserImportServiceTest.php",
+      "@php -l tests/Feature/Http/HttpApplicationTest.php",
+      "@php -l public/index.php",
       "@php -l bin/user_upload.php"
     ]
   },
