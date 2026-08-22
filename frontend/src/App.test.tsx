@@ -53,6 +53,7 @@ describe('App import workflow', () => {
     expect(importMock).toHaveBeenCalledOnce();
     expect(importMock).toHaveBeenCalledWith(file);
     expect(await screen.findByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Import complete' })).toHaveFocus();
     expect(screen.getByText('1 users imported and 1 rejected.')).toBeInTheDocument();
     expect(screen.queryByRole('heading', { name: 'Preview ready' })).not.toBeInTheDocument();
   });
@@ -123,6 +124,19 @@ describe('App CSV validation workflow', () => {
     expect(screen.getByRole('button', { name: 'Validate CSV' })).toBeDisabled();
   });
 
+  it('provides a logical keyboard focus order', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+
+    await user.tab();
+    expect(screen.getByLabelText('CSV file')).toHaveFocus();
+    await user.upload(screen.getByLabelText('CSV file'), new File(['csv'], 'users.csv'));
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Validate CSV' })).toHaveFocus();
+    await user.tab();
+    expect(screen.getByRole('button', { name: 'Start over' })).toHaveFocus();
+  });
+
   it('selects one CSV and sends it to the preview API', async () => {
     const user = userEvent.setup();
     previewMock.mockResolvedValue(preview);
@@ -138,6 +152,7 @@ describe('App CSV validation workflow', () => {
     expect(previewMock).toHaveBeenCalledOnce();
     expect(previewMock).toHaveBeenCalledWith(file);
     expect(await screen.findByRole('heading', { name: 'Preview ready' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Preview ready' })).toHaveFocus();
     const summary = screen.getByLabelText('CSV validation summary');
     expect(within(summary).getByText('Total')).toBeInTheDocument();
     expect(within(summary).getByText('2')).toBeInTheDocument();

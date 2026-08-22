@@ -1,4 +1,4 @@
-import { type FormEvent, useState } from 'react';
+import { type FormEvent, useEffect, useRef, useState } from 'react';
 import { ApiError, importCsv, previewCsv } from './api';
 import { CsvFilePicker } from './components/CsvFilePicker';
 import { ImportSummary } from './components/ImportSummary';
@@ -15,6 +15,13 @@ function App() {
   const [isImporting, setIsImporting] = useState(false);
   const [result, setResult] = useState<ImportResult | null>(null);
   const [inputKey, setInputKey] = useState(0);
+  const previewTitleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    if (preview !== null) {
+      previewTitleRef.current?.focus();
+    }
+  }, [preview]);
 
   const handleFileChange = (selectedFile: File | null) => {
     setPreview(null);
@@ -121,11 +128,20 @@ function App() {
               </div>
             </form>
 
-            {isLoading && <p className="notice" role="status">Uploading and validating CSV…</p>}
-            {error !== null && <p className="notice notice-error" role="alert">{error}</p>}
+            {isLoading && (
+              <p className="notice notice-loading" role="status" aria-live="polite">
+                <span className="loading-spinner" aria-hidden="true" />
+                Uploading and validating CSV…
+              </p>
+            )}
+            {error !== null && (
+              <p className="notice notice-error" role="alert" aria-live="assertive" aria-atomic="true">
+                {error}
+              </p>
+            )}
             {preview !== null && (
               <section className="preview-section" aria-labelledby="preview-title">
-                <h2 id="preview-title">Preview ready</h2>
+                <h2 ref={previewTitleRef} id="preview-title" tabIndex={-1}>Preview ready</h2>
                 <ImportSummary preview={preview} />
                 <UserPreviewTable records={preview.records} />
                 <ImportActions

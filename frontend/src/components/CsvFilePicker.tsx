@@ -26,11 +26,16 @@ export function CsvFilePicker({
         name="file"
         type="file"
         accept=".csv,text/csv"
+        aria-describedby="csv-file-hint csv-selected-file"
         disabled={disabled}
         onChange={handleChange}
       />
-      <p className="file-hint">Required columns: name, surname, email. Maximum size: 5 MiB.</p>
-      {file !== null && <p className="selected-file">Selected: {file.name}</p>}
+      <p id="csv-file-hint" className="file-hint">
+        Required columns: name, surname, email. Maximum size: 5 MiB.
+      </p>
+      <p id="csv-selected-file" className="selected-file" aria-live="polite">
+        {file === null ? 'No file selected.' : `Selected: ${file.name}`}
+      </p>
     </div>
   );
 }

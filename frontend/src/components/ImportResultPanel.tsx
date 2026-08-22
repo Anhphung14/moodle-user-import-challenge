@@ -1,3 +1,4 @@
+import { useEffect, useRef } from 'react';
 import type { ImportResult } from '../types';
 
 interface ImportResultPanelProps {
@@ -6,10 +7,21 @@ interface ImportResultPanelProps {
 }
 
 export function ImportResultPanel({ result, onStartOver }: ImportResultPanelProps) {
+  const titleRef = useRef<HTMLHeadingElement>(null);
+
+  useEffect(() => {
+    titleRef.current?.focus();
+  }, []);
+
   return (
-    <section className="result-panel" aria-labelledby="result-title" role="status">
+    <section
+      className="result-panel"
+      aria-labelledby="result-title"
+      aria-live="polite"
+      aria-atomic="true"
+    >
       <p className="result-icon" aria-hidden="true">✓</p>
-      <h2 id="result-title">Import complete</h2>
+      <h2 ref={titleRef} id="result-title" tabIndex={-1}>Import complete</h2>
       <p>{result.imported} users imported and {result.rejected} rejected.</p>
       <dl className="result-counts">
         <div>

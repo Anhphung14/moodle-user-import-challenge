@@ -24,6 +24,7 @@ describe('ImportResultPanel', () => {
     render(<ImportResultPanel result={result} onStartOver={onStartOver} />);
 
     expect(screen.getByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
+    expect(screen.getByRole('heading', { name: 'Import complete' })).toHaveFocus();
     expect(screen.getByText('Row 3, email: Email already exists.')).toBeInTheDocument();
     await user.click(screen.getByRole('button', { name: 'Start a new import' }));
     expect(onStartOver).toHaveBeenCalledOnce();
