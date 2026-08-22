@@ -1,60 +1,173 @@
-# Moodle User Import Application
+# Moodle User Import
 
-A small user-import application for processing CSV files through both a React web interface and a PHP command-line interface. The backend will share the same parsing, normalisation, validation, preview, and import logic across both entry points.
+A CSV user-import application with a React interface, a PHP REST API, and a command-line interface. The web and CLI entry points share the same parsing, normalization, validation, duplicate-detection, and PostgreSQL persistence flow.
 
-## Technology stack
+## Requirements
 
-- PHP 8.3+
-- PostgreSQL
-- React with TypeScript
-- Git
+- PHP 8.3+ with the `pdo_pgsql` and `mbstring` extensions
+- Composer 2
+- A locally running PostgreSQL instance
+- Node.js 20+ and npm
 
-## Planned import flow
+## Installation
 
-```text
-Upload -> Parse -> Validate -> Preview -> Import
-```
-
-## Repository structure
-
-```text
-backend/    PHP application, CLI, and backend tests
-frontend/   React web interface and frontend tests
-database/   PostgreSQL schema and database assets
-samples/    Example CSV files
-```
-
-## Local PostgreSQL
-
-Install and run PostgreSQL locally, then create the application's environment
-file:
+From the project root:
 
 ```bash
 cp .env.example .env
+cd backend && composer install
+cd ../frontend && npm install
 ```
 
-Add your local PostgreSQL connection string to `DATABASE_URL` in `.env`. The
-expected format is:
+Create a PostgreSQL database (the recommended name is `moodle_user_import`):
+
+```bash
+createdb moodle_user_import
+```
+
+Set the connection string in the root `.env` file:
 
 ```dotenv
-DATABASE_URL=postgresql://username:password@127.0.0.1:5432/moodle_user_import
+DATABASE_URL=postgresql://postgres:your_password@127.0.0.1:5432/moodle_user_import
 ```
 
-The `.env` file is ignored by Git. Never commit a real connection string or
-database credentials.
+Never commit `.env` or real credentials. Create the `users` table with:
 
-## Development status
+```bash
+php backend/bin/user_upload.php --create-table
+```
 
-The project is being implemented incrementally. Phase 1 establishes the repository, backend and frontend tooling, and the local PostgreSQL environment.
+> Warning: `--create-table` drops and recreates the current `users` table. All existing user data will be deleted.
 
-## Documentation roadmap
+## Running the application
 
-The completed README will include:
+Open two terminals from the project root.
 
-- Requirements and installation
-- Database configuration
-- Backend and frontend startup instructions
-- Web UI and CLI usage
-- CLI examples
-- Testing instructions
-- Assumptions and design decisions
+Terminal 1 — start the PHP API at `http://localhost:8080`:
+
+```bash
+php -S localhost:8080 -t backend/public backend/public/index.php
+```
+
+Verify the API:
+
+```bash
+curl http://localhost:8080/api/health
+```
+
+Terminal 2 — start React at `http://localhost:5173`:
+
+```bash
+cd frontend
+npm run dev
+```
+
+The frontend calls `http://localhost:8080` by default. To use a different API URL:
+
+```bash
+VITE_API_BASE_URL=http://localhost:9000 npm run dev
+```
+
+## CSV format
+
+Web uploads must be valid UTF-8, no larger than 5 MiB, and contain exactly these three columns in this order:
+
+```csv
+name,surname,email
+An,Nguyen,an@example.com
+```
+
+Processing rules:
+
+- Leading and trailing whitespace is removed.
+- Names and surnames are normalized to initial capitals.
+- Email addresses are converted to lowercase.
+- `name`, `surname`, and `email` are required.
+- Email addresses must have a valid format.
+- An email duplicated in the same file or already stored in the database is rejected.
+- Blank rows are skipped. An invalid header, column count, or UTF-8 sequence rejects the file.
+- Valid rows can still be imported when other rows fail record-level validation.
+
+An example file is available at [`samples/input/users.csv`](samples/input/users.csv).
+
+## CLI usage
+
+Preview a file without modifying the database:
+
+```bash
+php backend/bin/user_upload.php --file samples/input/users.csv --dry-run
+```
+
+Import all valid rows:
+
+```bash
+php backend/bin/user_upload.php --file samples/input/users.csv
+```
+
+Display help:
+
+```bash
+php backend/bin/user_upload.php --help
+```
+
+CSV paths are resolved relative to the terminal's current directory. When running from `backend`, use `../samples/input/users.csv` for the sample file.
+
+## API usage
+
+Preview a CSV file:
+
+```bash
+curl -F 'file=@samples/input/users.csv' \
+  http://localhost:8080/api/imports/preview
+```
+
+Import a CSV file:
+
+```bash
+curl -F 'file=@samples/input/users.csv' \
+  http://localhost:8080/api/imports
+```
+
+See [`docs/API.md`](docs/API.md) for endpoint contracts, responses, and error codes.
+
+## Quality checks
+
+Backend coding standard, static analysis, and tests:
+
+```bash
+cd backend
+composer check
+```
+
+Apply PHP formatting automatically:
+
+```bash
+cd backend
+composer format
+```
+
+Frontend tests, linting, and production build:
+
+```bash
+cd frontend
+npm test -- --run
+npm run lint
+npm run build
+```
+
+Integration tests use the local PostgreSQL database configured in `.env`. They manage data in the `users` table, so never point the test suite at a production database.
+
+## Project structure
+
+```text
+backend/bin/       CLI entry point
+backend/public/    HTTP entry point
+backend/src/       Domain, CSV, service, repository, database, and HTTP code
+backend/tests/     Unit, feature, integration, and smoke tests
+database/          PostgreSQL schema
+frontend/src/      React UI, API client, types, and component tests
+samples/input/     Example CSV input
+docs/              API and architecture documentation
+```
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the processing flow, transaction strategy, duplicate handling, and design decisions.
