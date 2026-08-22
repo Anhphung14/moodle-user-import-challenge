@@ -48,10 +48,86 @@ h1 {
   font-size: clamp(2rem, 8vw, 3rem);
 }
 
-.placeholder {
+.upload-form {
+  display: grid;
+  gap: 1.25rem;
+  margin-top: 2rem;
+}
+
+.file-picker {
+  display: grid;
+  gap: 0.5rem;
+}
+
+.file-picker label {
+  font-weight: 700;
+}
+
+.file-picker input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #aeb9c9;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.file-hint,
+.selected-file {
+  margin: 0;
+  color: #52627a;
+  font-size: 0.875rem;
+}
+
+.selected-file {
+  color: #214e92;
+  font-weight: 600;
+}
+
+.form-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+}
+
+button {
+  padding: 0.75rem 1rem;
+  border: 1px solid #214e92;
+  border-radius: 0.5rem;
+  background: #214e92;
+  color: #fff;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+button:disabled {
+  cursor: not-allowed;
+  opacity: 0.55;
+}
+
+.button-secondary {
+  background: #fff;
+  color: #214e92;
+}
+
+.notice,
+.preview-placeholder {
   margin: 2rem 0 0;
   padding: 1rem;
   border-radius: 0.5rem;
   background: #eef4ff;
   color: #214e92;
+}
+
+.notice-error {
+  background: #fff0f0;
+  color: #9f1d2d;
+}
+
+.preview-placeholder h2 {
+  margin-top: 0;
+}
+
+.preview-placeholder p:last-child {
+  margin-bottom: 0;
 }
