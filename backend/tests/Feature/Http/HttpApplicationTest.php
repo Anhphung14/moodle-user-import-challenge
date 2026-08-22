@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Application\Tests\Feature\Http;
 
 use Application\Http\HttpApplication;
+use Application\Http\ErrorHandler;
 use Application\Http\HttpRequest;
 use Application\Http\JsonResponse;
 use Application\Http\Router;
@@ -39,11 +40,17 @@ final class HttpApplicationTest extends TestCase
             throw new RuntimeException('password=secret; internal path=/private/app.php');
         });
 
-        $response = (new HttpApplication($router))->handle('GET', '/api/failure');
+        $response = (new HttpApplication(
+            $router,
+            new ErrorHandler(static function (string $_message): void {
+            }),
+        ))->handle('GET', '/api/failure');
         $json = $response->json();
 
         self::assertSame(500, $response->status);
         self::assertSame('internal_error', $response->body['error']['code']);
+        self::assertArrayHasKey('details', $response->body['error']);
+        self::assertSame('application/json; charset=utf-8', $response->headers['Content-Type']);
         self::assertStringNotContainsString('secret', $json);
         self::assertStringNotContainsString('/private', $json);
         self::assertStringNotContainsString('<html', strtolower($json));

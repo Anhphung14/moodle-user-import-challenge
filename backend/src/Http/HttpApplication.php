@@ -4,8 +4,6 @@ declare(strict_types=1);
 
 namespace Application\Http;
 
-use Throwable;
-
 final class HttpApplication
 {
     /** @var array<string, string> */
@@ -17,8 +15,10 @@ final class HttpApplication
         'Vary' => 'Origin',
     ];
 
-    public function __construct(private readonly Router $router = new Router())
-    {
+    public function __construct(
+        private readonly Router $router = new Router(),
+        private readonly ErrorHandler $errors = new ErrorHandler(),
+    ) {
         $this->router->add('GET', '/api/health', static fn (HttpRequest $_request): JsonResponse => new JsonResponse([
             'data' => ['status' => 'ok'],
         ]));
@@ -37,16 +37,16 @@ final class HttpApplication
             $response = $this->router->dispatch($request);
 
             if ($response === null) {
-                return $this->error(404, 'not_found', 'The requested endpoint was not found.');
+                return $this->withJsonHeaders($this->errors->response(
+                    404,
+                    'not_found',
+                    'The requested endpoint was not found.',
+                ));
             }
 
-            return new JsonResponse(
-                $response->body,
-                $response->status,
-                array_merge(self::JSON_HEADERS, $response->headers),
-            );
-        } catch (Throwable) {
-            return $this->error(500, 'internal_error', 'An unexpected error occurred.');
+            return $this->withJsonHeaders($response);
+        } catch (\Throwable $exception) {
+            return $this->withJsonHeaders($this->errors->handle($exception));
         }
     }
 
@@ -57,13 +57,13 @@ final class HttpApplication
         return is_string($path) && $path !== '' ? $path : '/';
     }
 
-    private function error(int $status, string $code, string $message): JsonResponse
+    private function withJsonHeaders(JsonResponse $response): JsonResponse
     {
-        return new JsonResponse([
-            'error' => [
-                'code' => $code,
-                'message' => $message,
-            ],
-        ], $status, self::JSON_HEADERS);
+        return new JsonResponse(
+            $response->body,
+            $response->status,
+            array_merge(self::JSON_HEADERS, $response->headers),
+        );
     }
+
 }

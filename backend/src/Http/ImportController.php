@@ -4,11 +4,9 @@ declare(strict_types=1);
 
 namespace Application\Http;
 
-use Application\Csv\Exception\CsvParsingException;
 use Application\Domain\ImportResult;
 use Application\Domain\ValidationError;
 use Closure;
-use PDOException;
 use Throwable;
 
 final readonly class ImportController
@@ -16,8 +14,10 @@ final readonly class ImportController
     private const int MAX_FILE_SIZE = 5 * 1024 * 1024;
 
     /** @param Closure(string): ImportResult $importUsers */
-    public function __construct(private Closure $importUsers)
-    {
+    public function __construct(
+        private Closure $importUsers,
+        private ErrorHandler $errors = new ErrorHandler(),
+    ) {
     }
 
     public function __invoke(HttpRequest $request): JsonResponse
@@ -25,23 +25,23 @@ final readonly class ImportController
         $file = $request->files['file'] ?? null;
 
         if ($file === null || $file->error === UPLOAD_ERR_NO_FILE) {
-            return $this->error(400, 'file_required', 'A CSV file is required in the file field.');
+            return $this->errors->response(400, 'file_required', 'A CSV file is required in the file field.');
         }
 
         if ($file->error === UPLOAD_ERR_INI_SIZE || $file->error === UPLOAD_ERR_FORM_SIZE) {
-            return $this->error(413, 'file_too_large', 'The CSV file exceeds the 5 MiB limit.');
+            return $this->errors->response(413, 'file_too_large', 'The CSV file exceeds the 5 MiB limit.');
         }
 
         if ($file->error !== UPLOAD_ERR_OK || $file->temporaryPath === '') {
-            return $this->error(400, 'upload_failed', 'The CSV file could not be uploaded.');
+            return $this->errors->response(400, 'upload_failed', 'The CSV file could not be uploaded.');
         }
 
         $actualSize = is_file($file->temporaryPath) ? filesize($file->temporaryPath) : false;
 
         if ($file->size > self::MAX_FILE_SIZE || $actualSize === false || $actualSize > self::MAX_FILE_SIZE) {
             return $actualSize === false
-                ? $this->error(400, 'upload_failed', 'The CSV file could not be uploaded.')
-                : $this->error(413, 'file_too_large', 'The CSV file exceeds the 5 MiB limit.');
+                ? $this->errors->response(400, 'upload_failed', 'The CSV file could not be uploaded.')
+                : $this->errors->response(413, 'file_too_large', 'The CSV file exceeds the 5 MiB limit.');
         }
 
         $ownedPath = tempnam(sys_get_temp_dir(), 'moodle-import-');
@@ -51,7 +51,7 @@ final readonly class ImportController
                 unlink($ownedPath);
             }
 
-            return $this->error(500, 'internal_error', 'The CSV file could not be processed.');
+            return $this->errors->response(500, 'internal_error', 'The CSV file could not be processed.');
         }
 
         try {
@@ -62,12 +62,8 @@ final readonly class ImportController
             }
 
             return new JsonResponse(['data' => $this->serialize($result)]);
-        } catch (CsvParsingException $exception) {
-            return $this->error(422, 'invalid_csv', $exception->getMessage());
-        } catch (PDOException) {
-            return $this->error(503, 'database_unavailable', 'The import service is temporarily unavailable.');
-        } catch (Throwable) {
-            return $this->error(500, 'internal_error', 'The CSV file could not be imported.');
+        } catch (Throwable $exception) {
+            return $this->errors->handle($exception);
         } finally {
             if (is_file($ownedPath)) {
                 unlink($ownedPath);
@@ -94,13 +90,4 @@ final readonly class ImportController
         ];
     }
 
-    private function error(int $status, string $code, string $message): JsonResponse
-    {
-        return new JsonResponse([
-            'error' => [
-                'code' => $code,
-                'message' => $message,
-            ],
-        ], $status);
-    }
 }

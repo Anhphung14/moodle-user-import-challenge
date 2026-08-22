@@ -8,6 +8,7 @@ use Application\Csv\Exception\CsvParsingException;
 use Application\Domain\ImportResult;
 use Application\Domain\ValidationError;
 use Application\Http\HttpApplication;
+use Application\Http\ErrorHandler;
 use Application\Http\ImportController;
 use Application\Http\Router;
 use Application\Http\UploadedFile;
@@ -121,7 +122,11 @@ final class ImportControllerTest extends TestCase
     private function application(\Closure $importUsers): HttpApplication
     {
         $router = new Router();
-        $controller = new ImportController($importUsers);
+        $controller = new ImportController(
+            $importUsers,
+            new ErrorHandler(static function (string $_message): void {
+            }),
+        );
         $router->add('POST', '/api/imports', $controller(...));
 
         return new HttpApplication($router);

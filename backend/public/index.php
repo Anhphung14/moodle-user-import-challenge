@@ -5,6 +5,7 @@ declare(strict_types=1);
 use Application\Http\HttpApplication;
 use Application\Http\HttpRequest;
 use Application\Http\ImportController;
+use Application\Http\ErrorHandler;
 use Application\Http\PreviewController;
 use Application\Http\Router;
 use Application\Csv\CsvUserParser;
@@ -27,6 +28,7 @@ $method = $_SERVER['REQUEST_METHOD'] ?? 'GET';
 $requestUri = $_SERVER['REQUEST_URI'] ?? '/';
 $request = HttpRequest::fromGlobals($method, $requestUri, $_FILES);
 $router = new Router();
+$errors = new ErrorHandler();
 $createImportService = static function (): UserImportService {
     $connection = (new ConnectionFactory())->create();
     $repository = new PostgresUserRepository($connection);
@@ -43,9 +45,9 @@ $createImportService = static function (): UserImportService {
 };
 $previewUsers = static fn (string $filePath): ImportPreview => $createImportService()->preview($filePath);
 $importUsers = static fn (string $filePath): ImportResult => $createImportService()->import($filePath);
-$previewController = new PreviewController($previewUsers);
-$importController = new ImportController($importUsers);
+$previewController = new PreviewController($previewUsers, $errors);
+$importController = new ImportController($importUsers, $errors);
 $router->add('POST', '/api/imports/preview', $previewController(...));
 $router->add('POST', '/api/imports', $importController(...));
 
-(new HttpApplication($router))->handle($request->method, $request->path, $request->files)->send();
+(new HttpApplication($router, $errors))->handle($request->method, $request->path, $request->files)->send();

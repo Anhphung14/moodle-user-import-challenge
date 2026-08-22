@@ -9,6 +9,7 @@ use Application\Domain\ImportPreview;
 use Application\Domain\ValidatedUserRecord;
 use Application\Domain\ValidationError;
 use Application\Http\HttpApplication;
+use Application\Http\ErrorHandler;
 use Application\Http\HttpRequest;
 use Application\Http\PreviewController;
 use Application\Http\Router;
@@ -133,7 +134,11 @@ final class PreviewControllerTest extends TestCase
     private function application(\Closure $previewUsers): HttpApplication
     {
         $router = new Router();
-        $controller = new PreviewController($previewUsers);
+        $controller = new PreviewController(
+            $previewUsers,
+            new ErrorHandler(static function (string $_message): void {
+            }),
+        );
         $router->add('POST', '/api/imports/preview', $controller(...));
 
         return new HttpApplication($router);
