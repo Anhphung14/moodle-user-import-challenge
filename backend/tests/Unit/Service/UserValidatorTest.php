@@ -102,14 +102,14 @@ final class UserValidatorTest extends TestCase
         self::assertSame(
             ['name', 'surname', 'email'],
             array_map(
-                static fn (ValidationError $error): string => $error->field,
+                static fn(ValidationError $error): string => $error->field,
                 $validated->errors,
             ),
         );
         self::assertSame(
             [UserValidator::REQUIRED, UserValidator::REQUIRED, UserValidator::REQUIRED],
             array_map(
-                static fn (ValidationError $error): string => $error->code,
+                static fn(ValidationError $error): string => $error->code,
                 $validated->errors,
             ),
         );
@@ -123,11 +123,11 @@ final class UserValidatorTest extends TestCase
 
         self::assertFalse($validated->isValid());
         self::assertSame(['name', 'email'], array_map(
-            static fn (ValidationError $error): string => $error->field,
+            static fn(ValidationError $error): string => $error->field,
             $validated->errors,
         ));
         self::assertSame([12, 12], array_map(
-            static fn (ValidationError $error): int => $error->rowNumber,
+            static fn(ValidationError $error): int => $error->rowNumber,
             $validated->errors,
         ));
     }

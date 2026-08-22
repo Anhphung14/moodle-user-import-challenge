@@ -6,6 +6,4 @@ namespace Application\Database\Exception;
 
 use RuntimeException;
 
-final class SchemaManagementException extends RuntimeException
-{
-}
+final class SchemaManagementException extends RuntimeException {}

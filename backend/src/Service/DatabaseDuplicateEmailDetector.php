@@ -12,9 +12,7 @@ final class DatabaseDuplicateEmailDetector
 {
     public const string DUPLICATE_EMAIL_IN_DATABASE = 'duplicate_email_in_database';
 
-    public function __construct(private readonly UserRepository $repository)
-    {
-    }
+    public function __construct(private readonly UserRepository $repository) {}
 
     /**
      * @param iterable<ValidatedUserRecord> $records

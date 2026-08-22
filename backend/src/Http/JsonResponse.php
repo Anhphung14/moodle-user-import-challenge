@@ -16,8 +16,7 @@ final readonly class JsonResponse
         public array $body,
         public int $status = 200,
         public array $headers = [],
-    ) {
-    }
+    ) {}
 
     /**
      * @throws JsonException

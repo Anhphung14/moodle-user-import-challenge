@@ -6,6 +6,4 @@ namespace Application\Cli\Exception;
 
 use InvalidArgumentException;
 
-final class InvalidCliArgumentsException extends InvalidArgumentException
-{
-}
+final class InvalidCliArgumentsException extends InvalidArgumentException {}

@@ -49,7 +49,7 @@ final class CsvUserParserTest extends TestCase
         );
 
         self::assertSame([2, 4], array_map(
-            static fn (UserRecord $record): int => $record->rowNumber,
+            static fn(UserRecord $record): int => $record->rowNumber,
             $records,
         ));
     }

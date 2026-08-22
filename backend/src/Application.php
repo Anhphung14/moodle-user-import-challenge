@@ -4,6 +4,4 @@ declare(strict_types=1);
 
 namespace Application;
 
-final class Application
-{
-}
+final class Application {}

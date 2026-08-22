@@ -23,8 +23,7 @@ final class UserImportService
         private readonly DatabaseDuplicateEmailDetector $databaseDuplicateDetector,
         private readonly UserRepository $repository,
         private readonly PDO $connection,
-    ) {
-    }
+    ) {}
 
     public function preview(string $filePath): ImportPreview
     {
@@ -68,7 +67,7 @@ final class UserImportService
             $preview = $this->preview($filePath);
             $validRecords = array_values(array_filter(
                 $preview->records,
-                static fn (ValidatedUserRecord $record): bool => $record->isValid(),
+                static fn(ValidatedUserRecord $record): bool => $record->isValid(),
             ));
             $importedCount = $validRecords === []
                 ? 0

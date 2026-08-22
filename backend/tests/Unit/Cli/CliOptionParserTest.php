@@ -49,6 +49,7 @@ final class CliOptionParserTest extends TestCase
         self::assertNull($options->file);
     }
 
+    /** @param list<string> $arguments */
     #[DataProvider('invalidArguments')]
     public function testInvalidArgumentsAreRejected(array $arguments, string $message): void
     {

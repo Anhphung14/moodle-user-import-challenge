@@ -66,7 +66,7 @@ final class UserImportServiceTest extends TestCase
         self::assertCount(3, $preview->errors());
         self::assertSame(
             ['required', 'invalid_email', 'duplicate_email_in_file'],
-            array_map(static fn ($error): string => $error->code, $preview->errors()),
+            array_map(static fn($error): string => $error->code, $preview->errors()),
         );
     }
 
@@ -114,7 +114,7 @@ final class UserImportServiceTest extends TestCase
         self::assertSame(3, $result->totalCount());
         self::assertCount(2, $result->errors);
         self::assertSame(['john@example.com'], array_map(
-            static fn (ValidatedUserRecord $record): string => $record->email,
+            static fn(ValidatedUserRecord $record): string => $record->email,
             $repository->insertedUsers,
         ));
         self::assertSame(1, $connection->beginCalls);
@@ -168,7 +168,7 @@ final class UserImportServiceTest extends TestCase
         self::assertSame(1, $result->rejectedCount);
         self::assertSame('duplicate_email_in_database', $result->errors[0]->code);
         self::assertSame(['jane@example.com'], array_map(
-            static fn (ValidatedUserRecord $record): string => $record->email,
+            static fn(ValidatedUserRecord $record): string => $record->email,
             $repository->insertedUsers,
         ));
         self::assertSame(2, $connection->beginCalls);
@@ -179,8 +179,7 @@ final class UserImportServiceTest extends TestCase
     private function service(
         UserRepository $repository,
         ?PDO $connection = null,
-    ): UserImportService
-    {
+    ): UserImportService {
         return new UserImportService(
             new CsvUserParser(),
             new UserNormalizer(),
@@ -222,9 +221,7 @@ final class PreviewUserRepository implements UserRepository
     /**
      * @param array<string, true> $existingEmails
      */
-    public function __construct(private array $existingEmails = [])
-    {
-    }
+    public function __construct(private array $existingEmails = []) {}
 
     public function findExistingEmails(iterable $emails): array
     {
@@ -274,9 +271,7 @@ final class TransactionTrackingPdo extends PDO
 
     private bool $activeTransaction = false;
 
-    public function __construct()
-    {
-    }
+    public function __construct() {}
 
     public function beginTransaction(): bool
     {

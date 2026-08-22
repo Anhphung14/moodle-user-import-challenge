@@ -31,8 +31,7 @@ final class ErrorHandlerTest extends TestCase
 
     public function testCsvErrorIncludesSafeRowDetail(): void
     {
-        $response = (new ErrorHandler(static function (string $_message): void {
-        }))->handle(new CsvParsingException('CSV row has the wrong number of columns.', 7));
+        $response = (new ErrorHandler(static function (string $_message): void {}))->handle(new CsvParsingException('CSV row has the wrong number of columns.', 7));
 
         self::assertSame(422, $response->status);
         self::assertSame('invalid_csv', $response->body['error']['code']);
@@ -41,8 +40,7 @@ final class ErrorHandlerTest extends TestCase
 
     public function testProjectDatabaseExceptionMapsToSafeServiceUnavailableError(): void
     {
-        $response = (new ErrorHandler(static function (string $_message): void {
-        }))->handle(new DatabaseConnectionException('postgres://user:secret@localhost/database'));
+        $response = (new ErrorHandler(static function (string $_message): void {}))->handle(new DatabaseConnectionException('postgres://user:secret@localhost/database'));
         $json = $response->json();
 
         self::assertSame(503, $response->status);

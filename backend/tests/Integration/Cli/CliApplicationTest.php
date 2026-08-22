@@ -94,7 +94,7 @@ final class CliApplicationTest extends TestCase
             CSV);
         $countBefore = $this->userCount();
         $application = new CliApplication(
-            previewUsers: fn (string $path): ImportPreview => $this->service()->preview($path),
+            previewUsers: fn(string $path): ImportPreview => $this->service()->preview($path),
         );
         $stdout = fopen('php://memory', 'w+');
         $stderr = fopen('php://memory', 'w+');
@@ -129,7 +129,7 @@ final class CliApplicationTest extends TestCase
             invalid,user,not-an-email
             CSV);
         $application = new CliApplication(
-            importUsers: fn (string $path): ImportResult => $this->service()->import($path),
+            importUsers: fn(string $path): ImportResult => $this->service()->import($path),
         );
         $stdout = fopen('php://memory', 'w+');
         $stderr = fopen('php://memory', 'w+');

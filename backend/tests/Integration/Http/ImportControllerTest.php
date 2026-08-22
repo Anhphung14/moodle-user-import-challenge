@@ -78,7 +78,7 @@ final class ImportControllerTest extends TestCase
         );
         $router = new Router();
         $controller = new ImportController(
-            fn (string $path): ImportResult => $service->import($path),
+            fn(string $path): ImportResult => $service->import($path),
         );
         $router->add('POST', '/api/imports', $controller(...));
         $size = filesize($this->csvPath);

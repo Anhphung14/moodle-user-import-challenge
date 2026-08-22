@@ -8,8 +8,8 @@ use Application\Csv\Exception\CsvParsingException;
 use Application\Domain\ImportPreview;
 use Application\Domain\ValidatedUserRecord;
 use Application\Domain\ValidationError;
-use Application\Http\HttpApplication;
 use Application\Http\ErrorHandler;
+use Application\Http\HttpApplication;
 use Application\Http\HttpRequest;
 use Application\Http\PreviewController;
 use Application\Http\Router;
@@ -75,7 +75,7 @@ final class PreviewControllerTest extends TestCase
 
     public function testPreviewRequiresMultipartFileField(): void
     {
-        $response = $this->application(static fn (): ImportPreview => new ImportPreview([]))
+        $response = $this->application(static fn(): ImportPreview => new ImportPreview([]))
             ->handle('POST', '/api/imports/preview');
 
         self::assertSame(400, $response->status);
@@ -121,7 +121,7 @@ final class PreviewControllerTest extends TestCase
 
     public function testPreviewRejectsFailedUpload(): void
     {
-        $response = $this->application(static fn (): ImportPreview => new ImportPreview([]))
+        $response = $this->application(static fn(): ImportPreview => new ImportPreview([]))
             ->handle('POST', '/api/imports/preview', [
                 'file' => new UploadedFile('', 'users.csv', 0, UPLOAD_ERR_PARTIAL),
             ]);
@@ -136,8 +136,7 @@ final class PreviewControllerTest extends TestCase
         $router = new Router();
         $controller = new PreviewController(
             $previewUsers,
-            new ErrorHandler(static function (string $_message): void {
-            }),
+            new ErrorHandler(static function (string $_message): void {}),
         );
         $router->add('POST', '/api/imports/preview', $controller(...));
 

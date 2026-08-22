@@ -113,9 +113,7 @@ final class RecordingUserRepository implements UserRepository
     /**
      * @param array<string, true> $existingEmails
      */
-    public function __construct(private readonly array $existingEmails)
-    {
-    }
+    public function __construct(private readonly array $existingEmails) {}
 
     public function findExistingEmails(iterable $emails): array
     {
