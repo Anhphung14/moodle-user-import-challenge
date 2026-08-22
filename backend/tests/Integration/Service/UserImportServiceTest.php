@@ -75,6 +75,39 @@ final class UserImportServiceTest extends TestCase
         self::assertSame($countBefore, $this->userCount());
     }
 
+    public function testImportStoresOnlyValidRecordsAndReturnsResult(): void
+    {
+        $result = $this->service()->import($this->csv(<<<'CSV'
+            name,surname,email
+            new,user,NEW@EXAMPLE.COM
+            ,invalid,invalid-email
+            existing,user,existing@example.com
+            CSV));
+
+        self::assertSame(1, $result->importedCount);
+        self::assertSame(2, $result->rejectedCount);
+        self::assertSame(2, $this->userCount());
+        self::assertSame(
+            1,
+            (int) $this->connection
+                ->query("SELECT COUNT(*) FROM users WHERE email = 'new@example.com'")
+                ->fetchColumn(),
+        );
+    }
+
+    public function testImportWithNoValidRecordsDoesNotChangeDatabase(): void
+    {
+        $countBefore = $this->userCount();
+
+        $result = $this->service()->import(
+            $this->csv("name,surname,email\n,,invalid"),
+        );
+
+        self::assertSame(0, $result->importedCount);
+        self::assertSame(1, $result->rejectedCount);
+        self::assertSame($countBefore, $this->userCount());
+    }
+
     private function service(): UserImportService
     {
         return new UserImportService(
@@ -83,6 +116,8 @@ final class UserImportServiceTest extends TestCase
             new UserValidator(),
             new DuplicateEmailDetector(),
             new DatabaseDuplicateEmailDetector($this->repository),
+            $this->repository,
+            $this->connection,
         );
     }
 
