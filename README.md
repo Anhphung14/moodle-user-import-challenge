@@ -9,6 +9,24 @@ A CSV user-import application with a React interface, a PHP REST API, and a comm
 - A locally running PostgreSQL instance
 - Node.js 20+ and npm
 
+## Main dependencies
+
+Backend:
+
+- `vlucas/phpdotenv` loads the local database configuration from `.env`.
+- PHPUnit provides the unit, feature, integration, and smoke test suites.
+- PHPStan performs static analysis at level 6.
+- PHP CS Fixer enforces the PHP coding standard.
+
+Frontend:
+
+- React and React DOM provide the user interface.
+- Vite provides the development server and production build.
+- Vitest and Testing Library test components and user interactions.
+- ESLint and TypeScript provide linting and compile-time type checks.
+
+Exact versions are locked in `backend/composer.lock` and `frontend/package-lock.json`.
+
 ## Installation
 
 From the project root:
@@ -67,6 +85,17 @@ The frontend calls `http://localhost:8080` by default. To use a different API UR
 ```bash
 VITE_API_BASE_URL=http://localhost:9000 npm run dev
 ```
+
+## Web UI usage
+
+1. Open `http://localhost:5173` after starting both the API and frontend.
+2. Select a UTF-8 CSV file that follows the format below.
+3. Choose **Validate CSV** to parse and validate the file without writing to the database.
+4. Review the total, valid, and invalid counts. Each preview row shows its normalized values, status, and validation errors.
+5. Choose **Import N users**, where `N` is the valid-record count. The server validates the uploaded file again and imports only valid records.
+6. Review the final imported and rejected counts. Correct any reported rows in the source CSV before trying them again.
+
+Selecting a different file clears the previous preview and import result. Previewing is safe to repeat because it does not modify the database.
 
 ## CSV format
 
@@ -157,6 +186,20 @@ npm run build
 
 Integration tests use the local PostgreSQL database configured in `.env`. They manage data in the `users` table, so never point the test suite at a production database.
 
+## Assumptions and design decisions
+
+- CSV files are comma-delimited, UTF-8 encoded, and contain exactly the `name,surname,email` header in that order.
+- Email uniqueness is case-insensitive because addresses are normalized to lowercase before validation and storage.
+- Invalid records are rejected individually; valid records in the same well-formed file can still be imported.
+- Preview never writes data. Import repeats validation inside a database transaction instead of trusting client-side preview state.
+- The web and CLI entry points share `UserImportService` so normalization, validation, and duplicate handling remain consistent.
+- Database constraints provide a final integrity layer, while prepared statements and batched queries keep persistence safe and efficient.
+- `--create-table` is intentionally destructive because the challenge explicitly requires a create/rebuild operation.
+- The application manages its own `users` table and does not write directly into a production Moodle schema.
+- CORS is configured for the local Vite origin (`http://localhost:5173`). Production deployment would require environment-specific origin configuration.
+
+See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the complete processing flow, transaction strategy, concurrency handling, and testing rationale.
+
 ## Project structure
 
 ```text
@@ -169,5 +212,3 @@ frontend/src/      React UI, API client, types, and component tests
 samples/input/     Example CSV input
 docs/              API and architecture documentation
 ```
-
-See [`docs/ARCHITECTURE.md`](docs/ARCHITECTURE.md) for the processing flow, transaction strategy, duplicate handling, and design decisions.
