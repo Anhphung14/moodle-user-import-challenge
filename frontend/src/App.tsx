@@ -1,19 +1,24 @@
 import { type FormEvent, useState } from 'react';
-import { ApiError, previewCsv } from './api';
+import { ApiError, importCsv, previewCsv } from './api';
 import { CsvFilePicker } from './components/CsvFilePicker';
 import { ImportSummary } from './components/ImportSummary';
+import { ImportActions } from './components/ImportActions';
+import { ImportResultPanel } from './components/ImportResultPanel';
 import { UserPreviewTable } from './components/UserPreviewTable';
-import type { ImportPreview } from './types';
+import type { ImportPreview, ImportResult } from './types';
 
 function App() {
   const [file, setFile] = useState<File | null>(null);
   const [preview, setPreview] = useState<ImportPreview | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isImporting, setIsImporting] = useState(false);
+  const [result, setResult] = useState<ImportResult | null>(null);
   const [inputKey, setInputKey] = useState(0);
 
   const handleFileChange = (selectedFile: File | null) => {
     setPreview(null);
+    setResult(null);
     setError(null);
 
     if (selectedFile !== null && !selectedFile.name.toLowerCase().endsWith('.csv')) {
@@ -24,6 +29,27 @@ function App() {
     }
 
     setFile(selectedFile);
+  };
+
+  const handleImport = async () => {
+    if (file === null || preview === null || preview.valid === 0 || isImporting) {
+      return;
+    }
+
+    setIsImporting(true);
+    setError(null);
+
+    try {
+      setResult(await importCsv(file));
+    } catch (caught) {
+      setError(
+        caught instanceof ApiError
+          ? caught.message
+          : 'The users could not be imported. Please try again.',
+      );
+    } finally {
+      setIsImporting(false);
+    }
   };
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
@@ -53,7 +79,9 @@ function App() {
   const resetWorkflow = () => {
     setFile(null);
     setPreview(null);
+    setResult(null);
     setError(null);
+    setIsImporting(false);
     setInputKey((key) => key + 1);
   };
 
@@ -65,33 +93,49 @@ function App() {
         <p>
           Upload, validate, preview, and import users from a CSV file.
         </p>
-        <form className="upload-form" onSubmit={handleSubmit}>
-          <CsvFilePicker
-            file={file}
-            disabled={isLoading}
-            inputKey={inputKey}
-            onFileChange={handleFileChange}
-          />
-          <div className="form-actions">
-            <button type="submit" disabled={file === null || isLoading}>
-              {isLoading ? 'Validating…' : 'Validate CSV'}
-            </button>
-            {(file !== null || preview !== null || error !== null) && (
-              <button type="button" className="button-secondary" disabled={isLoading} onClick={resetWorkflow}>
-                Start over
-              </button>
-            )}
-          </div>
-        </form>
+        {result !== null ? (
+          <ImportResultPanel result={result} onStartOver={resetWorkflow} />
+        ) : (
+          <>
+            <form className="upload-form" onSubmit={handleSubmit}>
+              <CsvFilePicker
+                file={file}
+                disabled={isLoading || isImporting}
+                inputKey={inputKey}
+                onFileChange={handleFileChange}
+              />
+              <div className="form-actions">
+                <button type="submit" disabled={file === null || isLoading || isImporting}>
+                  {isLoading ? 'Validating…' : 'Validate CSV'}
+                </button>
+                {(file !== null || preview !== null || error !== null) && (
+                  <button
+                    type="button"
+                    className="button-secondary"
+                    disabled={isLoading || isImporting}
+                    onClick={resetWorkflow}
+                  >
+                    Start over
+                  </button>
+                )}
+              </div>
+            </form>
 
-        {isLoading && <p className="notice" role="status">Uploading and validating CSV…</p>}
-        {error !== null && <p className="notice notice-error" role="alert">{error}</p>}
-        {preview !== null && (
-          <section className="preview-section" aria-labelledby="preview-title">
-            <h2 id="preview-title">Preview ready</h2>
-            <ImportSummary preview={preview} />
-            <UserPreviewTable records={preview.records} />
-          </section>
+            {isLoading && <p className="notice" role="status">Uploading and validating CSV…</p>}
+            {error !== null && <p className="notice notice-error" role="alert">{error}</p>}
+            {preview !== null && (
+              <section className="preview-section" aria-labelledby="preview-title">
+                <h2 id="preview-title">Preview ready</h2>
+                <ImportSummary preview={preview} />
+                <UserPreviewTable records={preview.records} />
+                <ImportActions
+                  validCount={preview.valid}
+                  isImporting={isImporting}
+                  onImport={handleImport}
+                />
+              </section>
+            )}
+          </>
         )}
       </section>
     </main>

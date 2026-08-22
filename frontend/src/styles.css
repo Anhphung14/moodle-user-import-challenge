@@ -246,6 +246,87 @@ button:disabled {
   text-align: center;
 }
 
+.import-actions {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.import-actions p {
+  margin: 0;
+  color: #9f1d2d;
+}
+
+.result-panel {
+  margin-top: 2rem;
+  padding: 2rem;
+  border: 1px solid #aad8ba;
+  border-radius: 1rem;
+  background: #effaf3;
+  text-align: center;
+}
+
+.result-panel h2 {
+  margin: 0;
+}
+
+.result-icon {
+  display: grid;
+  width: 3rem;
+  height: 3rem;
+  margin: 0 auto 1rem;
+  border-radius: 50%;
+  background: #176b37;
+  color: #fff;
+  font-size: 1.75rem;
+  place-items: center;
+}
+
+.result-counts {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.result-counts div {
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: #fff;
+}
+
+.result-counts dt {
+  color: #52627a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+}
+
+.result-counts dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.5rem;
+  font-weight: 800;
+}
+
+.result-errors {
+  margin: 0 0 1.5rem;
+  padding: 1rem;
+  border-radius: 0.5rem;
+  background: #fff4f5;
+  color: #9f1d2d;
+  text-align: left;
+}
+
+.result-errors h3 {
+  margin-top: 0;
+}
+
+.result-errors ul {
+  margin-bottom: 0;
+}
+
 @media (max-width: 40rem) {
   .app-shell {
     padding: 1rem;
@@ -256,6 +337,10 @@ button:disabled {
   }
 
   .import-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .result-counts {
     grid-template-columns: 1fr;
   }
 }

@@ -1,26 +1,117 @@
 import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ApiError, previewCsv } from './api';
+import { ApiError, importCsv, previewCsv } from './api';
 import App from './App';
-import type { ImportPreview } from './types';
+import type { ImportPreview, ImportResult } from './types';
 
 vi.mock('./api', async (importOriginal) => ({
   ...await importOriginal<typeof import('./api')>(),
+  importCsv: vi.fn(),
   previewCsv: vi.fn(),
 }));
 
 const previewMock = vi.mocked(previewCsv);
+const importMock = vi.mocked(importCsv);
 const preview: ImportPreview = {
   total: 2,
   valid: 1,
   invalid: 1,
   records: [],
 };
+const importResult: ImportResult = {
+  total: 2,
+  imported: 1,
+  rejected: 1,
+  errors: [],
+};
 
 afterEach(() => {
   cleanup();
   vi.clearAllMocks();
+});
+
+describe('App import workflow', () => {
+  async function reachPreview(user: ReturnType<typeof userEvent.setup>, value = preview) {
+    previewMock.mockResolvedValue(value);
+    const file = new File(['name,surname,email\nJohn,Smith,john@example.com'], 'users.csv');
+    await user.upload(screen.getByLabelText('CSV file'), file);
+    await user.click(screen.getByRole('button', { name: 'Validate CSV' }));
+    await screen.findByRole('heading', { name: 'Preview ready' });
+
+    return file;
+  }
+
+  it('imports the original file and displays the final result', async () => {
+    const user = userEvent.setup();
+    importMock.mockResolvedValue(importResult);
+    render(<App />);
+    const file = await reachPreview(user);
+
+    await user.click(screen.getByRole('button', { name: 'Import 1 users' }));
+
+    expect(importMock).toHaveBeenCalledOnce();
+    expect(importMock).toHaveBeenCalledWith(file);
+    expect(await screen.findByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
+    expect(screen.getByText('1 users imported and 1 rejected.')).toBeInTheDocument();
+    expect(screen.queryByRole('heading', { name: 'Preview ready' })).not.toBeInTheDocument();
+  });
+
+  it('disables import when preview has no valid users', async () => {
+    const user = userEvent.setup();
+    render(<App />);
+    await reachPreview(user, { total: 1, valid: 0, invalid: 1, records: [] });
+
+    expect(screen.getByRole('button', { name: 'Import 0 users' })).toBeDisabled();
+    expect(screen.getByText('No valid users are available to import.')).toBeInTheDocument();
+  });
+
+  it('prevents a second import request while the first is pending', async () => {
+    const user = userEvent.setup();
+    let resolveImport: ((value: ImportResult) => void) | undefined;
+    importMock.mockReturnValue(new Promise((resolve) => {
+      resolveImport = resolve;
+    }));
+    render(<App />);
+    await reachPreview(user);
+
+    const button = screen.getByRole('button', { name: 'Import 1 users' });
+    await user.click(button);
+    await user.click(button);
+
+    expect(importMock).toHaveBeenCalledOnce();
+    expect(screen.getByRole('button', { name: 'Importing…' })).toBeDisabled();
+    resolveImport?.(importResult);
+    expect(await screen.findByRole('heading', { name: 'Import complete' })).toBeInTheDocument();
+  });
+
+  it('keeps preview visible and shows an import API error', async () => {
+    const user = userEvent.setup();
+    importMock.mockRejectedValue(new ApiError('Database is unavailable.', 503, 'database_unavailable'));
+    render(<App />);
+    await reachPreview(user);
+
+    await user.click(screen.getByRole('button', { name: 'Import 1 users' }));
+
+    expect(await screen.findByRole('alert')).toHaveTextContent('Database is unavailable.');
+    expect(screen.getByRole('heading', { name: 'Preview ready' })).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Import 1 users' })).toBeEnabled();
+  });
+
+  it('starts a new workflow after a successful import', async () => {
+    const user = userEvent.setup();
+    importMock.mockResolvedValue(importResult);
+    render(<App />);
+    await reachPreview(user);
+    await user.click(screen.getByRole('button', { name: 'Import 1 users' }));
+    await screen.findByRole('heading', { name: 'Import complete' });
+
+    await user.click(screen.getByRole('button', { name: 'Start a new import' }));
+
+    expect(screen.getByLabelText('CSV file')).toBeInTheDocument();
+    expect(screen.getByRole('button', { name: 'Validate CSV' })).toBeDisabled();
+    expect(screen.queryByRole('heading', { name: 'Import complete' })).not.toBeInTheDocument();
+  });
 });
 
 describe('App CSV validation workflow', () => {
