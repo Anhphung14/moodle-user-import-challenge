@@ -5,6 +5,11 @@ declare(strict_types=1);
 namespace Application\Tests\Unit\Cli;
 
 use Application\Cli\CliApplication;
+use Application\Csv\Exception\CsvParsingException;
+use Application\Domain\ImportPreview;
+use Application\Domain\ValidatedUserRecord;
+use Application\Domain\ValidationError;
+use PDOException;
 use PHPUnit\Framework\TestCase;
 use RuntimeException;
 
@@ -93,6 +98,116 @@ final class CliApplicationTest extends TestCase
         self::assertSame(CliApplication::RUNTIME_ERROR, $exitCode);
         self::assertSame('', $stdout);
         self::assertStringContainsString('rebuild is not configured', $stderr);
+    }
+
+    public function testDryRunDisplaysSummaryErrorsAndWouldImportCount(): void
+    {
+        $preview = new ImportPreview([
+            new ValidatedUserRecord(2, 'John', 'Smith', 'john@example.com'),
+            new ValidatedUserRecord(
+                3,
+                'Jane',
+                'Doe',
+                'invalid-email',
+                [new ValidationError(3, 'email', 'invalid_email', 'Email is invalid.')],
+            ),
+        ]);
+        $receivedFile = null;
+        $application = new CliApplication(
+            previewUsers: static function (string $filePath) use ($preview, &$receivedFile): ImportPreview {
+                $receivedFile = $filePath;
+
+                return $preview;
+            },
+        );
+
+        [$exitCode, $stdout, $stderr] = $this->executeCli(
+            ['user_upload.php', '--file', 'users.csv', '--dry-run'],
+            $application,
+        );
+
+        self::assertSame(CliApplication::SUCCESS, $exitCode);
+        self::assertSame('users.csv', $receivedFile);
+        self::assertStringContainsString("Users found: 2\n", $stdout);
+        self::assertStringContainsString("Valid: 1\n", $stdout);
+        self::assertStringContainsString("Invalid: 1\n", $stdout);
+        self::assertStringContainsString('Row 3 [email] invalid_email: Email is invalid.', $stdout);
+        self::assertStringContainsString("Would import 1 users.\n", $stdout);
+        self::assertSame('', $stderr);
+    }
+
+    public function testDryRunFileErrorIsWrittenToStderr(): void
+    {
+        $application = new CliApplication(
+            previewUsers: static function (): never {
+                throw new CsvParsingException('CSV file does not exist or is not readable.');
+            },
+        );
+
+        [$exitCode, $stdout, $stderr] = $this->executeCli(
+            ['user_upload.php', '--file', 'missing.csv', '--dry-run'],
+            $application,
+        );
+
+        self::assertSame(CliApplication::RUNTIME_ERROR, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertSame("Error: CSV file does not exist or is not readable.\n", $stderr);
+    }
+
+    public function testDryRunUnexpectedErrorDoesNotExposeTechnicalDetails(): void
+    {
+        $application = new CliApplication(
+            previewUsers: static function (): never {
+                throw new RuntimeException('password=secret; SQL details');
+            },
+        );
+
+        [$exitCode, $stdout, $stderr] = $this->executeCli(
+            ['user_upload.php', '--file', 'users.csv', '--dry-run'],
+            $application,
+        );
+
+        self::assertSame(CliApplication::RUNTIME_ERROR, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertSame("Error: Unable to preview the CSV file.\n", $stderr);
+    }
+
+    public function testDryRunMissingUsersTableProvidesActionableError(): void
+    {
+        $application = new CliApplication(
+            previewUsers: static function (): never {
+                $exception = new PDOException('relation users does not exist');
+                $exception->errorInfo = ['42P01'];
+
+                throw $exception;
+            },
+        );
+
+        [$exitCode, $stdout, $stderr] = $this->executeCli(
+            ['user_upload.php', '--file', 'users.csv', '--dry-run'],
+            $application,
+        );
+
+        self::assertSame(CliApplication::RUNTIME_ERROR, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertSame(
+            "Error: The users table does not exist. Run --create-table first.\n",
+            $stderr,
+        );
+    }
+
+    public function testDryRunWithoutConfiguredHandlerReturnsRuntimeError(): void
+    {
+        [$exitCode, $stdout, $stderr] = $this->executeCli([
+            'user_upload.php',
+            '--file',
+            'users.csv',
+            '--dry-run',
+        ]);
+
+        self::assertSame(CliApplication::RUNTIME_ERROR, $exitCode);
+        self::assertSame('', $stdout);
+        self::assertSame("Error: CSV dry-run is not configured.\n", $stderr);
     }
 
     /**
