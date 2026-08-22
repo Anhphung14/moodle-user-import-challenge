@@ -1,6 +1,8 @@
 import { type FormEvent, useState } from 'react';
 import { ApiError, previewCsv } from './api';
 import { CsvFilePicker } from './components/CsvFilePicker';
+import { ImportSummary } from './components/ImportSummary';
+import { UserPreviewTable } from './components/UserPreviewTable';
 import type { ImportPreview } from './types';
 
 function App() {
@@ -85,12 +87,10 @@ function App() {
         {isLoading && <p className="notice" role="status">Uploading and validating CSV…</p>}
         {error !== null && <p className="notice notice-error" role="alert">{error}</p>}
         {preview !== null && (
-          <section className="preview-placeholder" aria-labelledby="preview-title">
+          <section className="preview-section" aria-labelledby="preview-title">
             <h2 id="preview-title">Preview ready</h2>
-            <p>
-              {preview.total} records found: {preview.valid} valid and {preview.invalid} invalid.
-            </p>
-            <p>The detailed record preview will appear here next.</p>
+            <ImportSummary preview={preview} />
+            <UserPreviewTable records={preview.records} />
           </section>
         )}
       </section>

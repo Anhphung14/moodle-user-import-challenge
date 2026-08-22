@@ -1,4 +1,4 @@
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, render, screen, within } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { ApiError, previewCsv } from './api';
@@ -47,7 +47,10 @@ describe('App CSV validation workflow', () => {
     expect(previewMock).toHaveBeenCalledOnce();
     expect(previewMock).toHaveBeenCalledWith(file);
     expect(await screen.findByRole('heading', { name: 'Preview ready' })).toBeInTheDocument();
-    expect(screen.getByText('2 records found: 1 valid and 1 invalid.')).toBeInTheDocument();
+    const summary = screen.getByLabelText('CSV validation summary');
+    expect(within(summary).getByText('Total')).toBeInTheDocument();
+    expect(within(summary).getByText('2')).toBeInTheDocument();
+    expect(screen.getByText('No user records were found in this CSV file.')).toBeInTheDocument();
   });
 
   it('shows loading state while preview is pending', async () => {

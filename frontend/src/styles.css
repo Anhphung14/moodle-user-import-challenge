@@ -26,7 +26,7 @@ body {
 }
 
 .import-panel {
-  width: min(100%, 44rem);
+  width: min(100%, 72rem);
   padding: 2.5rem;
   border: 1px solid #dce2eb;
   border-radius: 1rem;
@@ -110,8 +110,7 @@ button:disabled {
   color: #214e92;
 }
 
-.notice,
-.preview-placeholder {
+.notice {
   margin: 2rem 0 0;
   padding: 1rem;
   border-radius: 0.5rem;
@@ -124,10 +123,139 @@ button:disabled {
   color: #9f1d2d;
 }
 
-.preview-placeholder h2 {
-  margin-top: 0;
+.preview-section {
+  margin-top: 2rem;
 }
 
-.preview-placeholder p:last-child {
-  margin-bottom: 0;
+.preview-section h2 {
+  margin: 0 0 1rem;
+}
+
+.import-summary {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.75rem;
+  margin: 0 0 1.5rem;
+}
+
+.summary-card {
+  padding: 1rem;
+  border: 1px solid #dce2eb;
+  border-radius: 0.75rem;
+  background: #f7f9fc;
+}
+
+.summary-card dt {
+  color: #52627a;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.summary-card dd {
+  margin: 0.25rem 0 0;
+  font-size: 1.75rem;
+  font-weight: 800;
+}
+
+.summary-card-valid {
+  border-color: #aad8ba;
+  background: #effaf3;
+}
+
+.summary-card-invalid {
+  border-color: #efb5bd;
+  background: #fff4f5;
+}
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid #dce2eb;
+  border-radius: 0.75rem;
+}
+
+.preview-table {
+  width: 100%;
+  min-width: 58rem;
+  border-collapse: collapse;
+  text-align: left;
+}
+
+.preview-table th,
+.preview-table td {
+  padding: 0.875rem;
+  border-bottom: 1px solid #e5e9f0;
+  vertical-align: top;
+}
+
+.preview-table th {
+  background: #f7f9fc;
+  color: #41516a;
+  font-size: 0.75rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.preview-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  padding: 0.25rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.status-valid {
+  background: #dcf5e5;
+  color: #176b37;
+}
+
+.status-invalid {
+  background: #ffe1e5;
+  color: #9f1d2d;
+}
+
+.record-errors {
+  min-width: 14rem;
+  margin: 0;
+  padding-left: 1.2rem;
+  color: #9f1d2d;
+}
+
+.record-errors li + li {
+  margin-top: 0.35rem;
+}
+
+.no-errors {
+  color: #52627a;
+}
+
+.empty-preview {
+  margin: 0;
+  padding: 1rem;
+  border: 1px dashed #aeb9c9;
+  border-radius: 0.75rem;
+  color: #52627a;
+  text-align: center;
+}
+
+@media (max-width: 40rem) {
+  .app-shell {
+    padding: 1rem;
+  }
+
+  .import-panel {
+    padding: 1.25rem;
+  }
+
+  .import-summary {
+    grid-template-columns: 1fr;
+  }
 }
