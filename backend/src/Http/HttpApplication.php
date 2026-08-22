@@ -19,7 +19,7 @@ final class HttpApplication
         private readonly Router $router = new Router(),
         private readonly ErrorHandler $errors = new ErrorHandler(),
     ) {
-        $this->router->add('GET', '/api/health', static fn (HttpRequest $_request): JsonResponse => new JsonResponse([
+        $this->router->add('GET', '/api/health', static fn(HttpRequest $_request): JsonResponse => new JsonResponse([
             'data' => ['status' => 'ok'],
         ]));
     }

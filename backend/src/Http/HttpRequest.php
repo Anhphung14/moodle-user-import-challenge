@@ -11,8 +11,7 @@ final readonly class HttpRequest
         public string $method,
         public string $path,
         public array $files = [],
-    ) {
-    }
+    ) {}
 
     /** @param array<string, mixed> $files */
     public static function fromGlobals(string $method, string $requestUri, array $files): self

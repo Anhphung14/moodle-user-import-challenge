@@ -18,8 +18,7 @@ final readonly class PreviewController
     public function __construct(
         private Closure $previewUsers,
         private ErrorHandler $errors = new ErrorHandler(),
-    ) {
-    }
+    ) {}
 
     public function __invoke(HttpRequest $request): JsonResponse
     {
@@ -80,14 +79,14 @@ final readonly class PreviewController
             'valid' => $preview->validCount(),
             'invalid' => $preview->invalidCount(),
             'records' => array_map(
-                static fn (ValidatedUserRecord $record): array => [
+                static fn(ValidatedUserRecord $record): array => [
                     'rowNumber' => $record->rowNumber,
                     'name' => $record->name,
                     'surname' => $record->surname,
                     'email' => $record->email,
                     'valid' => $record->isValid(),
                     'errors' => array_map(
-                        static fn (ValidationError $error): array => [
+                        static fn(ValidationError $error): array => [
                             'rowNumber' => $error->rowNumber,
                             'field' => $error->field,
                             'code' => $error->code,

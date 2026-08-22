@@ -11,6 +11,5 @@ final readonly class UploadedFile
         public string $clientFilename,
         public int $size,
         public int $error,
-    ) {
-    }
+    ) {}
 }

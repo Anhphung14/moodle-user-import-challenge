@@ -11,6 +11,5 @@ final readonly class CliOptions
         public bool $dryRun,
         public bool $createTable,
         public bool $help,
-    ) {
-    }
+    ) {}
 }

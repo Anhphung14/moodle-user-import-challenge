@@ -31,7 +31,7 @@ final readonly class ImportPreview
     {
         return count(array_filter(
             $this->records,
-            static fn (ValidatedUserRecord $record): bool => $record->isValid(),
+            static fn(ValidatedUserRecord $record): bool => $record->isValid(),
         ));
     }
 
@@ -47,7 +47,7 @@ final readonly class ImportPreview
     {
         return array_values(array_merge(
             ...array_map(
-                static fn (ValidatedUserRecord $record): array => $record->errors,
+                static fn(ValidatedUserRecord $record): array => $record->errors,
                 $this->records,
             ),
         ));

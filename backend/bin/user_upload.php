@@ -42,8 +42,8 @@ $createImportService = static function (): UserImportService {
     );
 };
 
-$previewUsers = static fn (string $filePath): ImportPreview => $createImportService()->preview($filePath);
-$importUsers = static fn (string $filePath): ImportResult => $createImportService()->import($filePath);
+$previewUsers = static fn(string $filePath): ImportPreview => $createImportService()->preview($filePath);
+$importUsers = static fn(string $filePath): ImportResult => $createImportService()->import($filePath);
 
 exit((new CliApplication(
     rebuildUsersTable: $rebuildUsersTable,

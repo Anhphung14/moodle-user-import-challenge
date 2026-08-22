@@ -13,9 +13,7 @@ final class PostgresUserRepository implements UserRepository
 {
     private const int BATCH_SIZE = 500;
 
-    public function __construct(private readonly PDO $connection)
-    {
-    }
+    public function __construct(private readonly PDO $connection) {}
 
     public function findExistingEmails(iterable $emails): array
     {

@@ -20,14 +20,18 @@ final class CliApplication
 
     public const int INVALID_ARGUMENTS = 2;
 
+    /**
+     * @param (Closure(): void)|null $rebuildUsersTable
+     * @param (Closure(string): ImportPreview)|null $previewUsers
+     * @param (Closure(string): ImportResult)|null $importUsers
+     */
     public function __construct(
         private readonly CliOptionParser $parser = new CliOptionParser(),
         private readonly Usage $usage = new Usage(),
         private readonly ?Closure $rebuildUsersTable = null,
         private readonly ?Closure $previewUsers = null,
         private readonly ?Closure $importUsers = null,
-    ) {
-    }
+    ) {}
 
     /**
      * @param list<string> $arguments

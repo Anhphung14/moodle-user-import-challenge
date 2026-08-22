@@ -6,6 +6,4 @@ namespace Application\Database\Exception;
 
 use RuntimeException;
 
-final class DatabaseConnectionException extends RuntimeException
-{
-}
+final class DatabaseConnectionException extends RuntimeException {}

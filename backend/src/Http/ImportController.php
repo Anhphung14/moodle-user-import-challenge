@@ -17,8 +17,7 @@ final readonly class ImportController
     public function __construct(
         private Closure $importUsers,
         private ErrorHandler $errors = new ErrorHandler(),
-    ) {
-    }
+    ) {}
 
     public function __invoke(HttpRequest $request): JsonResponse
     {
@@ -79,7 +78,7 @@ final readonly class ImportController
             'imported' => $result->importedCount,
             'rejected' => $result->rejectedCount,
             'errors' => array_map(
-                static fn (ValidationError $error): array => [
+                static fn(ValidationError $error): array => [
                     'rowNumber' => $error->rowNumber,
                     'field' => $error->field,
                     'code' => $error->code,

@@ -24,7 +24,7 @@ final class UserNormalizer
 
         return preg_replace_callback(
             "/(^|[\\s'’-])\\p{L}/u",
-            static fn (array $match): string => mb_strtoupper($match[0], 'UTF-8'),
+            static fn(array $match): string => mb_strtoupper($match[0], 'UTF-8'),
             $lowercase,
         ) ?? $lowercase;
     }

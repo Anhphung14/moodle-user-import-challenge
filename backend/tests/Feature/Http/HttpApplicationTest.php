@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Application\Tests\Feature\Http;
 
-use Application\Http\HttpApplication;
 use Application\Http\ErrorHandler;
+use Application\Http\HttpApplication;
 use Application\Http\HttpRequest;
 use Application\Http\JsonResponse;
 use Application\Http\Router;
@@ -42,8 +42,7 @@ final class HttpApplicationTest extends TestCase
 
         $response = (new HttpApplication(
             $router,
-            new ErrorHandler(static function (string $_message): void {
-            }),
+            new ErrorHandler(static function (string $_message): void {}),
         ))->handle('GET', '/api/failure');
         $json = $response->json();
 

@@ -285,8 +285,7 @@ final class CliApplicationTest extends TestCase
     private function executeCli(
         array $arguments,
         ?CliApplication $application = null,
-    ): array
-    {
+    ): array {
         $stdout = fopen('php://memory', 'w+');
         $stderr = fopen('php://memory', 'w+');
         self::assertIsResource($stdout);

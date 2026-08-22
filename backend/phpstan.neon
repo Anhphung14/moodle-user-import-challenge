@@ -1,0 +1,11 @@
+parameters:
+    level: 6
+    paths:
+        - src
+        - bin
+        - public
+        - tests
+    tmpDir: vendor/phpstan-cache
+    checkMissingCallableSignature: true
+    reportUnmatchedIgnoredErrors: true
+    treatPhpDocTypesAsCertain: false

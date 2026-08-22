@@ -7,8 +7,8 @@ namespace Application\Tests\Feature\Http;
 use Application\Csv\Exception\CsvParsingException;
 use Application\Domain\ImportResult;
 use Application\Domain\ValidationError;
-use Application\Http\HttpApplication;
 use Application\Http\ErrorHandler;
+use Application\Http\HttpApplication;
 use Application\Http\ImportController;
 use Application\Http\Router;
 use Application\Http\UploadedFile;
@@ -63,7 +63,7 @@ final class ImportControllerTest extends TestCase
     public function testImportWithZeroValidRecordsReturnsSuccessfulResult(): void
     {
         $sourcePath = $this->csv("name,surname,email\nbad,user,bad-email\n");
-        $application = $this->application(static fn (): ImportResult => new ImportResult(0, 1, [
+        $application = $this->application(static fn(): ImportResult => new ImportResult(0, 1, [
             new ValidationError(2, 'email', 'invalid_email', 'Email is invalid.'),
         ]));
 
@@ -78,7 +78,7 @@ final class ImportControllerTest extends TestCase
 
     public function testImportRequiresOriginalCsvFileInsteadOfClientRecordList(): void
     {
-        $response = $this->application(static fn (): ImportResult => new ImportResult(0, 0))
+        $response = $this->application(static fn(): ImportResult => new ImportResult(0, 0))
             ->handle('POST', '/api/imports');
 
         self::assertSame(400, $response->status);
@@ -124,8 +124,7 @@ final class ImportControllerTest extends TestCase
         $router = new Router();
         $controller = new ImportController(
             $importUsers,
-            new ErrorHandler(static function (string $_message): void {
-            }),
+            new ErrorHandler(static function (string $_message): void {}),
         );
         $router->add('POST', '/api/imports', $controller(...));
 
