@@ -37,6 +37,7 @@
       "@php -l src/Domain/ImportPreview.php",
       "@php -l src/Domain/ImportResult.php",
       "@php -l src/Service/UserNormalizer.php",
+      "@php -l src/Service/UserValidator.php",
       "@php -l tests/bootstrap.php",
       "@php -l tests/Smoke/ApplicationTest.php",
       "@php -l tests/Unit/Database/ConnectionFactoryTest.php",
@@ -47,6 +48,7 @@
       "@php -l tests/Unit/Domain/ImportPreviewTest.php",
       "@php -l tests/Unit/Domain/ImportResultTest.php",
       "@php -l tests/Unit/Service/UserNormalizerTest.php",
+      "@php -l tests/Unit/Service/UserValidatorTest.php",
       "@php -l tests/Integration/Database/ConnectionFactoryTest.php",
       "@php -l tests/Integration/Database/SchemaManagerTest.php"
     ]
