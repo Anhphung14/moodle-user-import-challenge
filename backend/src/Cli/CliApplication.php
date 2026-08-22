@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Application\Cli;
 
 use Application\Cli\Exception\InvalidCliArgumentsException;
+use Closure;
+use Throwable;
 
 final class CliApplication
 {
@@ -17,6 +19,7 @@ final class CliApplication
     public function __construct(
         private readonly CliOptionParser $parser = new CliOptionParser(),
         private readonly Usage $usage = new Usage(),
+        private readonly ?Closure $rebuildUsersTable = null,
     ) {
     }
 
@@ -44,8 +47,39 @@ final class CliApplication
             return self::SUCCESS;
         }
 
+        if ($options->createTable) {
+            return $this->rebuildUsersTable($stdout, $stderr);
+        }
+
         fwrite($stderr, "Error: Command execution is not available yet.\n");
 
         return self::RUNTIME_ERROR;
+    }
+
+    /**
+     * @param resource $stdout
+     * @param resource $stderr
+     */
+    private function rebuildUsersTable(mixed $stdout, mixed $stderr): int
+    {
+        fwrite($stderr, "Warning: rebuilding the users table deletes all existing users.\n");
+
+        if ($this->rebuildUsersTable === null) {
+            fwrite($stderr, "Error: Users table rebuild is not configured.\n");
+
+            return self::RUNTIME_ERROR;
+        }
+
+        try {
+            ($this->rebuildUsersTable)();
+        } catch (Throwable) {
+            fwrite($stderr, "Error: Unable to rebuild the users table.\n");
+
+            return self::RUNTIME_ERROR;
+        }
+
+        fwrite($stdout, "Users table rebuilt successfully.\n");
+
+        return self::SUCCESS;
     }
 }

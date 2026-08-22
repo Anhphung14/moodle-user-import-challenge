@@ -66,6 +66,7 @@
       "@php -l tests/Unit/Service/UserImportServiceTest.php",
       "@php -l tests/Unit/Repository/PostgresUserRepositoryTest.php",
       "@php -l tests/Integration/Database/ConnectionFactoryTest.php",
+      "@php -l tests/Integration/Cli/CliApplicationTest.php",
       "@php -l tests/Integration/Database/SchemaManagerTest.php",
       "@php -l tests/Integration/Repository/PostgresUserRepositoryTest.php",
       "@php -l tests/Integration/Service/DatabaseDuplicateEmailDetectorTest.php",
